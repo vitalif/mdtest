@@ -925,6 +925,18 @@ static void updateResult(mdtest_results_t * res, mdtest_test_num_t test, uint64_
   res->stonewall_last_item[test] = o.items;
 }
 
+static void sync_dir(const char *testdir, const char *path) {
+  char temp_path[MAX_PATHLEN];
+  sprintf(temp_path, "%s/%s", testdir, path);
+  int fd = open(temp_path, O_RDONLY);
+  if (fd >= 0) {
+    fsync(fd);
+    close(fd);
+  } else {
+    printf("failed to open %s for fsync: %s\n", temp_path, strerror(errno));
+  }
+}
+
 void directory_test(const int iteration, const int ntasks, const char *path, rank_progress_t * progress) {
     int size;
     double t_start, t_end, t_end_before_barrier;
@@ -967,6 +979,7 @@ void directory_test(const int iteration, const int ntasks, const char *path, ran
             create_remove_items(0, 1, 1, 0, temp_path, 0, progress);
         }
       }
+      sync_dir(o.testdir, path);
       progress->stone_wall_timer_seconds = 0;
       t_end_before_barrier = GetTimeStamp();
       phase_end();
@@ -998,6 +1011,7 @@ void directory_test(const int iteration, const int ntasks, const char *path, ran
             mdtest_stat(0, 1, dir_iter, temp_path, progress);
         }
       }
+      sync_dir(o.testdir, path);
       t_end_before_barrier = GetTimeStamp();
       phase_end();
       t_end = GetTimeStamp();
@@ -1028,6 +1042,7 @@ void directory_test(const int iteration, const int ntasks, const char *path, ran
             ;        /* N/A */
         }
       }
+      sync_dir(o.testdir, path);
       t_end_before_barrier = GetTimeStamp();
       phase_end();
       t_end = GetTimeStamp();
@@ -1053,6 +1068,7 @@ void directory_test(const int iteration, const int ntasks, const char *path, ran
 
         rename_dir_test(1, dir_iter, temp_path, progress);
       }
+      sync_dir(o.testdir, path);
       t_end_before_barrier = GetTimeStamp();
       phase_end();
       t_end = GetTimeStamp();
@@ -1085,6 +1101,7 @@ void directory_test(const int iteration, const int ntasks, const char *path, ran
             create_remove_items(0, 1, 0, 0, temp_path, 0, progress);
         }
       }
+      sync_dir(o.testdir, path);
       t_end_before_barrier = GetTimeStamp();
       phase_end();
       t_end = GetTimeStamp();
@@ -1206,6 +1223,7 @@ void file_test(const int iteration, const int ntasks, const char *path, rank_pro
       progress->items_done = 0;
       progress->start_time = GetTimeStamp();
       file_test_create(iteration, ntasks, path, progress, &t_start);
+      sync_dir(o.testdir, path);
       t_end_before_barrier = GetTimeStamp();
       phase_end();
       t_end = GetTimeStamp();
@@ -1254,6 +1272,7 @@ void file_test(const int iteration, const int ntasks, const char *path, rank_pro
         /* stat files */
         mdtest_stat((o.random_seed > 0 ? 1 : 0), 0, dir_iter, temp_path, progress);
       }
+      sync_dir(o.testdir, path);
       t_end_before_barrier = GetTimeStamp();
       phase_end();
       t_end = GetTimeStamp();
@@ -1284,6 +1303,7 @@ void file_test(const int iteration, const int ntasks, const char *path, rank_pro
                 mdtest_read(0,0, dir_iter, temp_path);
         }
       }
+      sync_dir(o.testdir, path);
       t_end_before_barrier = GetTimeStamp();
       phase_end();
       t_end = GetTimeStamp();
@@ -1318,6 +1338,7 @@ void file_test(const int iteration, const int ntasks, const char *path, rank_pro
             create_remove_items(0, 0, 0, 0, temp_path, 0, progress);
         }
       }
+      sync_dir(o.testdir, path);
       t_end_before_barrier = GetTimeStamp();
       phase_end();
       t_end = GetTimeStamp();
